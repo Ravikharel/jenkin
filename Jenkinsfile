@@ -71,7 +71,7 @@ pipeline {
             steps{
                 script{ 
                     sh '''
-                         docker exec -it mysql mysql -u root -proot -h 127.0.0.1 -P 3306 -e "USE myapp; CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL);"
+                         docker exec  mysql mysql -u root -proot -h 127.0.0.1 -P 3306 -e "USE myapp; CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL);"
 
                     '''
                 }
