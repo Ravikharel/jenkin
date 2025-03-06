@@ -1,4 +1,4 @@
-CREATE DATABASE myapp;
+
 
 USE myapp;
 
