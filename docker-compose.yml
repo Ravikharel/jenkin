@@ -1,0 +1,47 @@
+version: "3.8"
+services:
+  mysql:
+    image: mysql 
+    container_name: mysql
+    environment: 
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: myapp
+    ports: 
+      - "3306:3306"
+    volumes: 
+      - mysql-data:/var/lib/mysql
+    networks: 
+      - naya-network
+    
+  backend:
+    container_name: backend_server
+    image:  harbor.registry.local/jenkins/backend:v1
+    ports: 
+      - '5000:5000'
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: myapp
+    networks:
+      - naya-network 
+    depends_on: 
+      - mysql
+    command: ["/bin/bash", "-c", "/wait-for-it.sh mysql:3306 -- npm start"]
+  frontend:
+    image: harbor.registry.local/jenkins/frontend:v1
+    container_name: frontend_server
+    ports:
+      - '80:80'
+    depends_on: 
+      - backend
+    networks: 
+      - naya-network
+    
+    
+
+volumes: 
+   mysql-data: 
+networks: 
+   naya-network:
+    driver: bridge
