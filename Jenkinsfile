@@ -48,19 +48,29 @@ pipeline {
             }
         }
 
-        stage('Running Docker Container ') { 
+        stage('Creating Docker Network') { 
             agent {
                 label "vagrant-slave"
             }
             steps { 
                 script { 
                     sh """
-                        docker container run -d -p 3306:3306 --name mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=myapp --network naya-network mysql:latest
-                        docker container run -d -p 80:80 --name frontend --network naya-network ${HARBOR_URL}${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
-                        docker container run -d -p 5000:5000 --name backend --network naya-network ${HARBOR_URL}${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
+                        docker network create naya-network || true
                     """
                 }
-                
+            }
+        }
+
+        stage('Running Docker Containers') { 
+            agent {
+                label "vagrant-slave"
+            }
+            steps { 
+                script { 
+                    sh """
+                        docker-compose up -d
+                    """
+                }
             }
         }
 
@@ -74,7 +84,7 @@ pipeline {
                     sh '''
                     echo "Waiting for MySQL to be ready..."
                     for i in {1..30}; do
-                        if docker exec mysql mysqladmin ping -h mysql --silent; then
+                        if docker exec mysql mysqladmin ping -h localhost -u root -proot --silent; then
                             echo "MySQL is up and running!"
                             break
                         fi
@@ -93,11 +103,17 @@ pipeline {
             steps{
                 script{ 
                     sh '''
-                         docker exec  mysql mysql -u root -proot -h mysql -P 3306 -e "USE myapp; CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL);"
+                        for i in {1..5}; do
+                            if docker exec mysql mysql -u root -proot -h localhost -P 3306 -e "USE myapp; CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL);"; then
+                                echo "MySQL configuration successful!"
+                                break
+                            fi
+                            echo "Retrying MySQL configuration..."
+                            sleep 5
+                        done
                     '''
                 }
             }
         }
     }
 }
-    
