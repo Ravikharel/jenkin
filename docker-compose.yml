@@ -15,7 +15,7 @@ services:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   frontend:
-    image: harbor.registry.local/jenkins1/Nginx:v1
+    image: harbor.registry.local/jenkins1/nginx1:v1
     container_name: frontend
     ports:
       - "80:80"

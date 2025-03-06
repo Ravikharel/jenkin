@@ -4,7 +4,7 @@ pipeline {
     }
     environment {
         HARBOR_URL = "harbor.registry.local/jenkins1/"
-        IMAGE_NAME_FRONTEND = "Nginx"
+        IMAGE_NAME_FRONTEND = "nginx1"
         IMAGE_NAME_BACKEND = "nodejs"
         IMAGE_NAME_MYSQL = "mysql"
         IMAGE_TAG = "v1"
