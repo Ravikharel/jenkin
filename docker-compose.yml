@@ -32,6 +32,11 @@ services:
       - arko
     depends_on:
       - mysql
+    environment:
+    DB_HOST: mysql
+    DB_USER: root
+    DB_PASSWORD: root
+    DB_NAME: myapp
 
 networks:
   arko:
