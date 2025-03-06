@@ -1,7 +1,7 @@
 pipeline { 
     agent any
     environment {
-        HARBOR_URL = "harbor.registry.local/jenkins/"
+        HARBOR_URL = "harbor.registry.local/jenkins1/"
         IMAGE_NAME_FRONTEND = "frontend"
         IMAGE_NAME_BACKEND = "backend"
         IMAGE_NAME_MYSQL = "mysql"
