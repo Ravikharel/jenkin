@@ -4,7 +4,6 @@ pipeline {
         HARBOR_URL = "harbor.registry.local/jenkins1/"
         IMAGE_NAME_FRONTEND = "frontend"
         IMAGE_NAME_BACKEND = "backend"
-        IMAGE_NAME_MYSQL = "mysql"
         IMAGE_TAG = "v1"
         HARBOR_PASSWORD = "Harbor12345"
     }
@@ -33,7 +32,7 @@ pipeline {
             }
         }
 
-        stage('Pulling Images and Running MySQL Container on Agent Node') { 
+        stage('Pulling Images on Agent Node') { 
             agent { 
                 label "vagrant-slave"
             }
@@ -48,7 +47,7 @@ pipeline {
             }
         }
 
-        stage('Running Docker Container ') { 
+        stage('Running Docker Containers') { 
             agent {
                 label "vagrant-slave"
             }
@@ -56,14 +55,28 @@ pipeline {
                 script { 
                     sh """
                         
-                        docker container run -d -p 3306:3306 --name mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=myapp --network naya-network mysql:latest
-                        docker container run -d -p 80:80 --name frontend --network naya-network ${HARBOR_URL}${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
-                        docker container run -d -p 5000:5000 --name backend --network naya-network ${HARBOR_URL}${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
+                        docker network create naya-network || true
+                        
+                        # Stop and remove existing containers if running
+                        docker stop mysql frontend backend || true
+                        docker rm mysql frontend backend || true
+
+                        
+                        docker container run -d -p 3306:3306 --name mysql \
+                            -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=myapp \
+                            --network naya-network mysql:latest
+
+                        
+                        docker container run -d -p 80:80 --name frontend \
+                            --network naya-network ${HARBOR_URL}${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
+                        
+                        docker container run -d -p 5000:5000 --name backend \
+                            --network naya-network ${HARBOR_URL}${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
                     """
                 }
-                
             }
         }
+
         stage('Configuring MySQL'){ 
             agent {
                 label "vagrant-slave"
@@ -71,8 +84,20 @@ pipeline {
             steps{
                 script{ 
                     sh '''
-                         docker exec  mysql mysql -u root -proot -h 127.0.0.1 -P 3306 -e "USE myapp; CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL);"
-
+                        echo "Waiting for MySQL to be ready..."
+                        until docker exec mysql mysqladmin ping -h mysql --silent; do
+                            sleep 2
+                            echo "Waiting for MySQL..."
+                        done
+                        echo "MySQL is ready. Running SQL commands."
+                        docker exec mysql mysql -u root -proot -h mysql -P 3306 -e "
+                            USE myapp; 
+                            CREATE TABLE IF NOT EXISTS users (
+                                id INT AUTO_INCREMENT PRIMARY KEY, 
+                                name VARCHAR(255) NOT NULL, 
+                                email VARCHAR(255) NOT NULL
+                            );
+                        "
                     '''
                 }
             }
