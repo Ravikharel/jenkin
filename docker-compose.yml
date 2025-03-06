@@ -9,33 +9,33 @@ services:
     ports:
       - "3306:3306"
     networks:
-      - naya-network
+      - arko 
     volumes:
       - db_data:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   frontend:
-    image: ${HARBOR_URL}${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
+    image: harbor.registry.local/jenkins1/Nginx:v1
     container_name: frontend
     ports:
       - "80:80"
     networks:
-      - naya-network
+      - arko
     depends_on:
       - mysql
 
   backend:
-    image: ${HARBOR_URL}${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
+    image: harbor.registry.local/jenkins1/nodejs:v1
     container_name: backend
     ports:
       - "5000:5000"
     networks:
-      - naya-network
+      - arko
     depends_on:
       - mysql
 
 networks:
-  naya-network:
+  arko:
 volumes:
   db_data:
   
