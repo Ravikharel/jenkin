@@ -58,7 +58,7 @@ pipeline {
                         docker network create naya-network
                         docker container run -d -p 3306:3306 --name mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=myapp --network naya-network mysql:latest
                         docker container run -d -p 80:80 --name frontend --network naya-network ${HARBOR_URL}${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
-                        docker container run -d -p 5000:5000 --name backend --network naya-network ${HARBOR_URL}${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
+                        docker container run -d -p 5000:5000 --name backend -e DB_HOST=mysql -e DB_USER=root -e DB_PASSWORD=root DB_NAME=myapp --network naya-network ${HARBOR_URL}${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
                     """
                 }
                 
@@ -71,7 +71,8 @@ pipeline {
             steps{
                 script{ 
                     sh '''
-                         docker container  exec mysql mysql -u root -proot -e "USE myapp; CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL);"
+                         docker exec -it mysql mysql -u root -proot -h 127.0.0.1 -P 3306 -e "USE myapp; CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL);"
+
                     '''
                 }
             }
