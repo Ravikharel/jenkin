@@ -55,7 +55,7 @@ pipeline {
             steps { 
                 script { 
                     sh """
-                        docker network create naya-network
+                       
                         docker container run -d -p 3306:3306 --name mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=myapp --network naya-network mysql:latest
                         docker container run -d -p 80:80 --name frontend --network naya-network ${HARBOR_URL}${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
                         docker container run -d -p 5000:5000 --name backend -e DB_HOST=mysql -e DB_USER=root -e DB_PASSWORD=root DB_NAME=myapp --network naya-network ${HARBOR_URL}${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
