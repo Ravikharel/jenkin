@@ -10,6 +10,9 @@ services:
       - "3306:3306"
     networks:
       - naya-network
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   frontend:
     image: ${HARBOR_URL}${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
@@ -33,4 +36,6 @@ services:
 
 networks:
   naya-network:
+volumes:
+  db_data:
   
